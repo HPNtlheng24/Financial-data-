@@ -1,0 +1,4 @@
+If a user uploads a file for an existing year, 
+I’d check for existing records. 
+I’d prefer merging—updating existing months and inserting new ones. 
+Alternatively, I could delete and reinsert if the user opts to overwrite.
