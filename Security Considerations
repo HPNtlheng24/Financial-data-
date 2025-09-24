@@ -1,0 +1,3 @@
+File uploads can pose risks like malicious content or oversized files. 
+I mitigate this by limiting file size, using temporary storage, 
+and sanitizing inputs before inserting into MySQL to prevent SQL injection.
