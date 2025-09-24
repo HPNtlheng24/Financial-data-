@@ -1,0 +1,4 @@
+I validate the file type using multer and check the structure using xlsx 
+by verifying the presence of 'Month' and 'Amount' columns.
+If validation fails, I return a 400 error with a clear message like 
+‘Invalid file format or missing columns
