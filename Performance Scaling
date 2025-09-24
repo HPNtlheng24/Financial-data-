@@ -1,0 +1,3 @@
+For large files, I use Promise.all() to batch insert rows efficiently.
+If performance becomes a bottleneck, I’d switch to bulk insert queries or 
+offload processing to a background worker
