@@ -1,0 +1,29 @@
+// routes/financeRoutes.js
+const express = require('express');
+const multer = require('multer');
+const XLSX = require('xlsx');
+const db = require('../db');
+
+const router = express.Router();
+const upload = multer({ dest: 'uploads/' });
+
+router.post('/upload/:userId/:year', upload.single('file'), async (req, res) => {
+  try {
+    const { userId, year } = req.params;
+    const workbook = XLSX.readFile(req.file.path);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = XLSX.utils.sheet_to_json(sheet);
+
+    const insertPromises = data.map(row => {
+      return db.execute(
+        'INSERT INTO financial_records (user_id, year, month, amount) VALUES (?, ?, ?, ?)',
+        [userId, year, row.Month, row.Amount]
+      );
+    });
+
+    await Promise.all(insertPromises);
+    res.json({ message: 'Upload successful' });
+  } catch (err) {
+    res.status(500).json({ error: 'Upload failed', details: err.message });
+  }
+});
