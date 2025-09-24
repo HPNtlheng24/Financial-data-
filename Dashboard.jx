@@ -1,0 +1,82 @@
+// Dashboard.jsx
+import React, { useState } from 'react';
+import { Chart } from 'chart.js/auto';
+
+function Dashboard() {
+  const [file, setFile] = useState(null);
+  const [userName, setUserName] = useState('');
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [tableData, setTableData] = useState([]);
+  const [monthly, setMonthly] = useState([]);
+
+  const upload = async (e) => {
+    e.preventDefault();
+    if (!file || !userName) return alert('file and user name required');
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('user_name', userName);
+    fd.append('year', year);
+
+    const res = await fetch('/upload', { method: 'POST', body: fd });
+    const json = await res.json();
+    if (!res.ok) return alert(JSON.stringify(json));
+    alert('Uploaded: ' + json.upserted);
+    fetchRecords();
+  };
+
+  const fetchRecords = async () => {
+    const res = await fetch(`/records?user_name=${encodeURIComponent(userName)}&year=${year}`);
+    const json = await res.json();
+    setTableData(json.data || []);
+    setMonthly(json.monthly || []);
+    drawChart(json.monthly || []);
+  };
+
+  const drawChart = (monthlyData) => {
+    const ctx = document.getElementById('barChart').getContext('2d');
+    if (window._myChart) window._myChart.destroy();
+    window._myChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+        datasets: [{ label: 'Amount', data: monthlyData }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>Upload Excel</h2>
+      <form onSubmit={upload}>
+        <input value={userName} onChange={e=>setUserName(e.target.value)} placeholder="Person name" required/>
+        <input value={year} onChange={e=>setYear(e.target.value)} type="number" min="1900" max="2100"/>
+        <input type="file" accept=".xlsx,.xls" onChange={e=>setFile(e.target.files[0])} />
+        <button type="submit">Upload</button>
+      </form>
+
+      <h2>Dashboard</h2>
+      <button onClick={fetchRecords}>Refresh</button>
+      <div style={{height: 300}}>
+        <canvas id="barChart"></canvas>
+      </div>
+
+      <h3>Table</h3>
+      <table border="1" cellPadding="6">
+        <thead><tr><th>Month</th><th>Amount</th><th>Category</th><th>Note</th></tr></thead>
+        <tbody>
+          {tableData.map((r,i) => (
+            <tr key={i}>
+              <td>{r.month}</td>
+              <td>{r.amount.toFixed(2)}</td>
+              <td>{r.category || ''}</td>
+              <td>{r.note || ''}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default Dashboard;
